@@ -13,21 +13,16 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class DetalleMovimientoService {
 
-    private final RestTemplate restTemplate;
-
     @Autowired
     private DetalleMovimientoRepository detalleMovimientoRepository;
 
-    @Value("${clienteService.url}")
-    private String clienteServiceUrl;
-
-    public DetalleMovimientoService(RestTemplateBuilder restTemplateBuilder) {
-        restTemplate = restTemplateBuilder.build();
-    }
+    @Autowired
+    private ClienteService clienteService;
 
     public List<DetalleMovimiento> getMovimientosByCllienteId(long clienteId, String fechaInicial, String fechaFinal) {
         return detalleMovimientoRepository.queryBy(clienteId, fechaInicial, fechaFinal);
@@ -61,20 +56,9 @@ public class DetalleMovimientoService {
          */
     }
 
-    public List<DetalleMovimiento> getMovimientosByNombreClliente(String nombreCliente, String fechaInicial, String fechaFinal) {
+    public List<DetalleMovimiento> getMovimientosByNombreCliente(String nombreCliente, String fechaInicial, String fechaFinal) throws InterruptedException, ExecutionException {
         // obtengo el clienteId llamando al servicio clientes/ del otro microservicio
-
-        if (clienteServiceUrl.isEmpty()) {
-            return null;
-        }
-
-        String url = clienteServiceUrl + "/param?nombre=" + nombreCliente;
-
-        Cliente cliente = restTemplate.getForObject(url, Cliente.class);
-
-        if (cliente == null) {
-            return null;
-        }
+        Cliente cliente = clienteService.getByNombre(nombreCliente).get();
 
         return detalleMovimientoRepository.queryBy(cliente.getClienteId(), fechaInicial, fechaFinal);
     }

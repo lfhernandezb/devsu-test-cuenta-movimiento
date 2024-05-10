@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 public class ReporteController {
@@ -35,7 +36,13 @@ public class ReporteController {
             @RequestParam("fechaInicial") String fechaInicial,
             @RequestParam("fechaFinal") String fechaFinal) {
 
-        return new ResponseEntity<List<DetalleMovimiento>>(detalleMovimientoService.getMovimientosByNombreClliente(
-                nombreCliente, fechaInicial, fechaFinal), HttpStatus.OK);
+        try {
+            return new ResponseEntity<List<DetalleMovimiento>>(detalleMovimientoService.getMovimientosByNombreCliente(
+                    nombreCliente, fechaInicial, fechaFinal), HttpStatus.OK);
+        } catch (InterruptedException e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (ExecutionException e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
