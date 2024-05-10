@@ -1,6 +1,9 @@
 package com.example.devsutestcuentamovimiento.service;
 
+import com.example.devsutestcuentamovimiento.error_handling.RestErrorHandler;
 import com.example.devsutestcuentamovimiento.persistence.repository.CuentaCrudRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.devsutestcuentamovimiento.persistence.entity.Cuenta;
@@ -11,6 +14,7 @@ import java.util.Optional;
 @Service
 public class CuentaService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CuentaService.class);
     @Autowired
     private CuentaCrudRepository cuentaCrudRepository;
 
@@ -26,7 +30,7 @@ public class CuentaService {
         return cuentaCrudRepository.save(cuenta);
     }
 
-    public boolean delete(long id) {
+    public boolean delete(long id) throws IllegalArgumentException {
         return getById(id).map((cuenta) -> {
             cuentaCrudRepository.deleteById(id);
             return true;

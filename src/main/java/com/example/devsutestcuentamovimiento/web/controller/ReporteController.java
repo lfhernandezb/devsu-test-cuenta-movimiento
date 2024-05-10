@@ -24,9 +24,9 @@ public class ReporteController {
     public ResponseEntity<List<DetalleMovimiento>> getDetalleMovimientoByClienteId(
             @RequestParam("clienteId") long clienteId,
             @RequestParam("fechaInicial") String fechaInicial,
-            @RequestParam("fechaFinal") String fechaFinal) {
+            @RequestParam("fechaFinal") String fechaFinal) throws ExecutionException, InterruptedException {
 
-        return new ResponseEntity<List<DetalleMovimiento>>(detalleMovimientoService.getMovimientosByCllienteId(
+        return new ResponseEntity<List<DetalleMovimiento>>(detalleMovimientoService.getMovimientosByClienteId(
                 clienteId, fechaInicial, fechaFinal), HttpStatus.OK);
     }
 
@@ -36,13 +36,8 @@ public class ReporteController {
             @RequestParam("fechaInicial") String fechaInicial,
             @RequestParam("fechaFinal") String fechaFinal) {
 
-        try {
             return new ResponseEntity<List<DetalleMovimiento>>(detalleMovimientoService.getMovimientosByNombreCliente(
                     nombreCliente, fechaInicial, fechaFinal), HttpStatus.OK);
-        } catch (InterruptedException e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (ExecutionException e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
     }
 }

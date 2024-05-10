@@ -1,9 +1,16 @@
 package com.example.devsutestcuentamovimiento.service;
 
+import com.example.devsutestcuentamovimiento.error_handling.RestErrorHandler;
+import com.example.devsutestcuentamovimiento.exception.AccountNotFoundException;
+import com.example.devsutestcuentamovimiento.exception.InsufficientFundsException;
+import com.example.devsutestcuentamovimiento.exception.MovementTypeNotFoundException;
+import com.example.devsutestcuentamovimiento.exception.MovementTypeNotSupportedException;
 import com.example.devsutestcuentamovimiento.persistence.repository.MovimientoCrudRepository;
 import com.example.devsutestcuentamovimiento.persistence.entity.Cuenta;
 import com.example.devsutestcuentamovimiento.persistence.entity.Movimiento;
 import com.example.devsutestcuentamovimiento.persistence.entity.TipoMovimiento;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +20,8 @@ import java.util.Optional;
 
 @Service
 public class MovimientoService {
+
+    private static final Logger logger = LoggerFactory.getLogger(MovimientoService.class);
 
     @Autowired
     private MovimientoCrudRepository movimientoCrudRepository;
@@ -31,16 +40,25 @@ public class MovimientoService {
         return movimientoCrudRepository.findById(id);
     }
 
-    public Optional<Movimiento> save(Movimiento movimiento) {
+    public Optional<Movimiento> save(Movimiento movimiento)
+            throws AccountNotFoundException, MovementTypeNotFoundException, MovementTypeNotSupportedException, InsufficientFundsException {
 
         int factorToMultiplyMovementValue = 1;
 
         System.out.println("movimiento: "+movimiento.toString());
         Cuenta cuenta = cuentaService.getById(movimiento.getCuentaId()).orElse(null);
 
+        if (cuenta == null) {
+            throw new AccountNotFoundException("Cuenta no encontrada con id " + movimiento.getCuentaId());
+        }
+
         System.out.println("cuenta encotrada");
 
         TipoMovimiento tipoMovimiento = tipoMovimientoService.getById(movimiento.getTipoMovimientoId()).orElse(null);
+
+        if (tipoMovimiento == null) {
+            throw new MovementTypeNotFoundException("Tipo movimiento no encontrada con id " + movimiento.getTipoMovimientoId());
+        }
 
         System.out.println("tipo movimiento encotrado");
 
@@ -48,13 +66,11 @@ public class MovimientoService {
             factorToMultiplyMovementValue = -1;
         }
         else if (!tipoMovimiento.getDescripcion().trim().equals("Deposito")) {
-            System.out.println("tipo movimiento no soportado");
-            return Optional.empty();
+            throw new MovementTypeNotSupportedException("Tipo de movimiento no soportado " + tipoMovimiento.getDescripcion().trim());
         }
 
         if (cuenta.getSaldo() + factorToMultiplyMovementValue * movimiento.getValor() < 0) {
-            System.out.println("saldo insuficiente");
-            return Optional.empty();
+            throw new InsufficientFundsException("Saldo insuficiente para la operacion");
         }
 
         movimiento.setSaldoInicial(cuenta.getSaldo());
@@ -68,7 +84,7 @@ public class MovimientoService {
         return Optional.of(mov);
     }
 
-    public boolean delete(long id) {
+    public boolean delete(long id) throws IllegalArgumentException {
         return getById(id).map((movimiento) -> {
             movimientoCrudRepository.deleteById(id);
             return true;
