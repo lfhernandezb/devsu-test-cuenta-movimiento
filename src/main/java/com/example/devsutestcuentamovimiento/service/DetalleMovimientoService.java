@@ -2,8 +2,12 @@ package com.example.devsutestcuentamovimiento.service;
 
 import com.example.devsutestcuentamovimiento.persistence.entity.DetalleMovimiento;
 import com.example.devsutestcuentamovimiento.persistence.repository.DetalleMovimientoRepository;
+import com.example.devsutestcuentamovimiento.pojo.Cliente;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -13,10 +17,19 @@ import java.util.Map;
 @Service
 public class DetalleMovimientoService {
 
+    private final RestTemplate restTemplate;
+
     @Autowired
     private DetalleMovimientoRepository detalleMovimientoRepository;
 
-    public List<DetalleMovimiento> getMovimientos(long clienteId, String fechaInicial, String fechaFinal) {
+    @Value("${clienteService.url}")
+    private String clienteServiceUrl;
+
+    public DetalleMovimientoService(RestTemplateBuilder restTemplateBuilder) {
+        restTemplate = restTemplateBuilder.build();
+    }
+
+    public List<DetalleMovimiento> getMovimientosByCllienteId(long clienteId, String fechaInicial, String fechaFinal) {
         return detalleMovimientoRepository.queryBy(clienteId, fechaInicial, fechaFinal);
         /*
         List<Map<String, Object>> reportDetails = detalleMovimientoRepository.queryBy(clienteId, fechaInicial, fechaFinal);
@@ -46,5 +59,23 @@ public class DetalleMovimientoService {
         return list;
 
          */
+    }
+
+    public List<DetalleMovimiento> getMovimientosByNombreClliente(String nombreCliente, String fechaInicial, String fechaFinal) {
+        // obtengo el clienteId llamando al servicio clientes/ del otro microservicio
+
+        if (clienteServiceUrl.isEmpty()) {
+            return null;
+        }
+
+        String url = clienteServiceUrl + "/param?nombre=" + nombreCliente;
+
+        Cliente cliente = restTemplate.getForObject(url, Cliente.class);
+
+        if (cliente == null) {
+            return null;
+        }
+
+        return detalleMovimientoRepository.queryBy(cliente.getClienteId(), fechaInicial, fechaFinal);
     }
 }

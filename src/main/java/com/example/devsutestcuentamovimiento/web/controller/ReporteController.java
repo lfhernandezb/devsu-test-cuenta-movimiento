@@ -19,13 +19,23 @@ public class ReporteController {
     @Autowired
     private DetalleMovimientoService detalleMovimientoService;
 
-    @GetMapping("/reportes")
-    public ResponseEntity<List<DetalleMovimiento>> getDetalleMovimiento(
+    @GetMapping("/reportes/clienteId")
+    public ResponseEntity<List<DetalleMovimiento>> getDetalleMovimientoByClienteId(
             @RequestParam("clienteId") long clienteId,
             @RequestParam("fechaInicial") String fechaInicial,
             @RequestParam("fechaFinal") String fechaFinal) {
 
-        return new ResponseEntity<List<DetalleMovimiento>>(detalleMovimientoService.getMovimientos(
+        return new ResponseEntity<List<DetalleMovimiento>>(detalleMovimientoService.getMovimientosByCllienteId(
                 clienteId, fechaInicial, fechaFinal), HttpStatus.OK);
+    }
+
+    @GetMapping("/reportes/nombreCliente")
+    public ResponseEntity<List<DetalleMovimiento>> getDetalleMovimientoByNombreCliente(
+            @RequestParam("nombreCliente") String nombreCliente,
+            @RequestParam("fechaInicial") String fechaInicial,
+            @RequestParam("fechaFinal") String fechaFinal) {
+
+        return new ResponseEntity<List<DetalleMovimiento>>(detalleMovimientoService.getMovimientosByNombreClliente(
+                nombreCliente, fechaInicial, fechaFinal), HttpStatus.OK);
     }
 }
